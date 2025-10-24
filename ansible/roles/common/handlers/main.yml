@@ -1,0 +1,31 @@
+---
+# =============================================================================
+# Common Role - Handlers
+# =============================================================================
+# These are triggered by tasks when configuration changes
+
+# - name: restart chrony
+#   service:
+#     name: chrony
+#     state: restarted
+#   when: ansible_service_mgr == "systemd"
+
+# - name: restart fail2ban
+#   service:
+#     name: fail2ban
+#     state: restarted
+#   when: ansible_service_mgr == "systemd"
+
+# - name: restart sshd
+#   service:
+#     name: sshd
+#     state: restarted
+#   when: ansible_service_mgr == "systemd"
+
+# - name: reload sysctl
+#   command: sysctl -p
+#   changed_when: false
+
+# - name: reload systemd
+#   systemd:
+#     daemon_reload: yes

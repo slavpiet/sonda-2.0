@@ -1,0 +1,189 @@
+---
+# =============================================================================
+# Common Role - Default Variables
+# =============================================================================
+
+# =============================================================================
+# PACKAGE MANAGEMENT
+# =============================================================================
+# Upgrade all packages on deployment (use with caution)
+upgrade_all_packages: false
+
+# =============================================================================
+# FIREWALL CONFIGURATION
+# =============================================================================
+# Open service ports in firewall during Stage 1
+# Set to false to open ports progressively in later stages
+firewall_open_service_ports: true
+
+# Additional firewall rules (optional)
+# firewall_additional_rules:
+#   - { port: '3000', proto: 'tcp', comment: 'Custom service' }
+
+# =============================================================================
+# KERNEL TUNING
+# =============================================================================
+# These are applied when uncommenting the sysctl section
+# Adjust based on your traffic profile (small/medium/large)
+
+# Network buffer sizes (in bytes)
+sysctl_net_rmem_max: "134217728"      # 128 MB
+sysctl_net_wmem_max: "134217728"
+sysctl_net_rmem_default: "33554432"   # 32 MB
+sysctl_net_wmem_default: "33554432"
+
+# Packet queue sizes
+sysctl_netdev_max_backlog: "5000"
+sysctl_netdev_budget: "600"
+sysctl_netdev_budget_usecs: "8000"
+
+# File system limits
+sysctl_file_max: "2097152"
+sysctl_inotify_max_watches: "524288"
+
+# Virtual memory (CRITICAL for Elasticsearch)
+sysctl_vm_max_map_count: "262144"
+sysctl_vm_swappiness: "1"
+
+# =============================================================================
+# SYSTEM LIMITS
+# =============================================================================
+# File descriptor and process limits
+# Applied when uncommenting the limits section
+
+limits_nofile_soft: "65536"
+limits_nofile_hard: "65536"
+limits_nproc_soft: "32768"
+limits_nproc_hard: "32768"
+
+# Higher limits for monitoring user
+monitoring_nofile_soft: "1048576"
+monitoring_nofile_hard: "1048576"
+
+# =============================================================================
+# TIME SYNCHRONIZATION
+# =============================================================================
+# System timezone (inherited from group_vars, can override here)
+# system_timezone: UTC
+
+# NTP servers (when enabling NTP sync)
+ntp_servers:
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org
+  - 2.pool.ntp.org
+  - 3.pool.ntp.org
+
+# =============================================================================
+# SERVICE OPTIMIZATION
+# =============================================================================
+# Disable unnecessary services
+disable_unnecessary_services: false
+
+# Services to disable (when enabled)
+services_to_disable:
+  - snapd
+  - bluetooth
+  - cups
+  - avahi-daemon
+
+# Set CPU governor to performance mode
+cpu_governor_performance: false
+
+# Disable Transparent Huge Pages (recommended for Elasticsearch)
+disable_thp: false
+
+# =============================================================================
+# NETWORK INTERFACE CONFIGURATION
+# =============================================================================
+# Configure SPAN interface for packet capture
+configure_span_interface: false
+
+# SPAN interface settings (inherited from inventory, can override)
+# span_interface: ens224
+# management_interface: ens192
+
+# Ring buffer sizes for SPAN interface
+span_rx_ring_size: "4096"
+span_tx_ring_size: "4096"
+
+# =============================================================================
+# SECURITY HARDENING
+# =============================================================================
+# Install and configure fail2ban
+install_fail2ban: false
+
+# Fail2ban settings
+fail2ban_bantime: "3600"        # 1 hour
+fail2ban_findtime: "600"        # 10 minutes
+fail2ban_maxretry: "5"
+
+# SSH hardening
+harden_ssh: false
+
+# Automatic security updates
+auto_security_updates: false
+
+# =============================================================================
+# LOGGING
+# =============================================================================
+# Log retention (days)
+log_retention_days: 30
+
+# Remote syslog server (optional)
+# remote_syslog_server: "syslog.example.com"
+# remote_syslog_port: 514
+
+# =============================================================================
+# DIRECTORY STRUCTURE
+# =============================================================================
+# Base paths (inherited from group_vars)
+# deployment_base_dir: /opt/monitoring
+
+# Additional directories to create
+additional_directories: []
+# Example:
+# additional_directories:
+#   - /opt/custom
+#   - /var/log/custom
+
+# =============================================================================
+# VALIDATION
+# =============================================================================
+# Commands to verify during validation
+essential_commands:
+  - curl
+  - wget
+  - jq
+  - tcpdump
+  - htop
+  - git
+
+# =============================================================================
+# TRAFFIC PROFILES (for future tuning)
+# =============================================================================
+# Adjust sysctl and interface settings based on traffic volume
+# Uncomment relevant profile when enabling network tuning
+
+traffic_profiles:
+  small:
+    description: "< 1 Gbps - Development/Test"
+    netdev_max_backlog: "1000"
+    rmem_max: "33554432"    # 32 MB
+  
+  medium:
+    description: "1-10 Gbps - Small Production"
+    netdev_max_backlog: "5000"
+    rmem_max: "134217728"   # 128 MB
+  
+  large:
+    description: "10-40 Gbps - Production"
+    netdev_max_backlog: "10000"
+    rmem_max: "268435456"   # 256 MB
+  
+  xlarge:
+    description: "40+ Gbps - High Volume"
+    netdev_max_backlog: "30000"
+    rmem_max: "536870912"   # 512 MB
+
+# Current traffic profile (used when uncommenting tuning sections)
+# traffic_profile: medium

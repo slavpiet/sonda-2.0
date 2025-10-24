@@ -1,6 +1,26 @@
 ---
-# Common role - System preparation
-# Skeleton version - validates structure only
+# =============================================================================
+# Common Role - System Preparation - FULL IMPLEMENTATION
+# =============================================================================
+# Save this as: ansible/roles/common/tasks/main.yml
+#
+# ACTIVE:
+#   - Package cache update
+#   - Essential package installation
+#   - Timezone configuration
+#   - Directory structure creation
+#   - Basic validation
+#
+# COMMENTED (ready to enable):
+#   - System users & groups
+#   - Firewall configuration
+#   - Kernel tuning (sysctl)
+#   - System limits
+#   - NTP time sync
+#   - Service optimization
+#   - Network interface tuning
+#   - Security hardening
+# =============================================================================
 
 - name: Display role information
   debug:
@@ -25,44 +45,472 @@
       - "  Architecture: {{ ansible_architecture }}"
       - "  Hostname: {{ ansible_hostname }}"
       - "  Python: {{ ansible_python_version }}"
-      - "  CPUs: {{ ansible_processor_vcpus | default(ansible_processor_cores | default('N/A')) }}"
-      - "  Memory: {{ (ansible_memtotal_mb / 1024) | round(1) if ansible_memtotal_mb is defined else 'N/A' }} GB"
+      - "  CPUs: {{ ansible_processor_vcpus | default(ansible_processor_cores | default(ansible_processor_count | default('N/A'))) }}"
+      - "  Memory: {% if ansible_memtotal_mb is defined %}{{ (ansible_memtotal_mb / 1024) | round(1) }} GB{% else %}N/A{% endif %}"
 
-- name: Verify sudo access
-  command: whoami
-  register: current_user
-  changed_when: false
-  become: yes
+# =============================================================================
+# PACKAGE MANAGEMENT - ACTIVE
+# =============================================================================
 
-- name: Display privilege status
-  debug:
-    msg: "Running as: {{ current_user.stdout }} ✓"
+- name: Update apt package cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  tags: [packages]
+
+- name: Install essential system packages
+  apt:
+    name:
+      # Network utilities
+      - curl
+      - wget
+      - net-tools
+      - tcpdump
+      - ethtool
+      - dnsutils
+      # System monitoring
+      - htop
+      - iotop
+      - sysstat
+      - dstat
+      # Compression utilities
+      - zip
+      - unzip
+      - bzip2
+      - gzip
+      # Text processing
+      - jq
+      # Version control (for troubleshooting)
+      - git
+      # Build essentials (for potential compilation)
+      - build-essential
+      # Python pip (for additional tools)
+      - python3-pip
+    state: present
+  tags: [packages]
+
+# # Uncomment to upgrade all packages (BE CAREFUL in production)
+# - name: Upgrade all packages to latest version
+#   apt:
+#     upgrade: dist
+#   tags: [packages, upgrade]
+#   when: upgrade_all_packages | default(false)
+
+# =============================================================================
+# SYSTEM USERS & GROUPS - COMMENTED (Ready to enable)
+# =============================================================================
+
+# - name: Create monitoring group
+#   group:
+#     name: monitoring
+#     state: present
+#     system: yes
+#   tags: [users]
+
+# - name: Create monitoring user
+#   user:
+#     name: monitoring
+#     group: monitoring
+#     groups: docker  # Will be added after docker is installed
+#     shell: /bin/bash
+#     create_home: yes
+#     system: yes
+#     comment: "Monitoring stack service user"
+#   tags: [users]
+
+# - name: Add SSH user to monitoring group
+#   user:
+#     name: "{{ ansible_user }}"
+#     groups: monitoring
+#     append: yes
+#   tags: [users]
+
+# =============================================================================
+# FIREWALL CONFIGURATION - COMMENTED (Ready to enable)
+# =============================================================================
+
+# - name: Install UFW firewall
+#   apt:
+#     name: ufw
+#     state: present
+#   tags: [firewall]
+
+# - name: Configure UFW defaults
+#   ufw:
+#     direction: "{{ item.direction }}"
+#     policy: "{{ item.policy }}"
+#   loop:
+#     - { direction: 'incoming', policy: 'deny' }
+#     - { direction: 'outgoing', policy: 'allow' }
+#     - { direction: 'routed', policy: 'deny' }
+#   tags: [firewall]
+
+# - name: Allow SSH through firewall
+#   ufw:
+#     rule: allow
+#     port: '22'
+#     proto: tcp
+#     comment: 'SSH access'
+#   tags: [firewall]
+
+# - name: Allow monitoring service ports
+#   ufw:
+#     rule: allow
+#     port: "{{ item.port }}"
+#     proto: tcp
+#     comment: "{{ item.comment }}"
+#   loop:
+#     - { port: '5601', comment: 'Kibana' }
+#     - { port: '9200', comment: 'Elasticsearch' }
+#     - { port: '8005', comment: 'Arkime' }
+#     - { port: '8889', comment: 'Velociraptor' }
+#   tags: [firewall]
+#   when: firewall_open_service_ports | default(true)
+
+# - name: Enable UFW
+#   ufw:
+#     state: enabled
+#   tags: [firewall]
+
+# =============================================================================
+# KERNEL TUNING (SYSCTL) - COMMENTED (Ready to enable)
+# =============================================================================
+
+# - name: Apply kernel tuning parameters
+#   sysctl:
+#     name: "{{ item.name }}"
+#     value: "{{ item.value }}"
+#     state: present
+#     sysctl_set: yes
+#     reload: yes
+#   loop:
+#     # Network performance
+#     - { name: 'net.core.rmem_max', value: '134217728' }
+#     - { name: 'net.core.wmem_max', value: '134217728' }
+#     - { name: 'net.core.rmem_default', value: '33554432' }
+#     - { name: 'net.core.wmem_default', value: '33554432' }
+#     - { name: 'net.ipv4.tcp_rmem', value: '4096 87380 134217728' }
+#     - { name: 'net.ipv4.tcp_wmem', value: '4096 65536 134217728' }
+#     - { name: 'net.core.netdev_max_backlog', value: '5000' }
+#     - { name: 'net.core.netdev_budget', value: '600' }
+#     - { name: 'net.core.netdev_budget_usecs', value: '8000' }
+#     # File system
+#     - { name: 'fs.file-max', value: '2097152' }
+#     - { name: 'fs.inotify.max_user_watches', value: '524288' }
+#     # Virtual memory (CRITICAL for Elasticsearch)
+#     - { name: 'vm.max_map_count', value: '262144' }
+#     - { name: 'vm.swappiness', value: '1' }
+#   tags: [sysctl, tuning]
+
+# =============================================================================
+# SYSTEM LIMITS - COMMENTED (Ready to enable)
+# =============================================================================
+
+# - name: Configure system limits
+#   pam_limits:
+#     domain: "{{ item.domain }}"
+#     limit_type: "{{ item.type }}"
+#     limit_item: "{{ item.item }}"
+#     value: "{{ item.value }}"
+#   loop:
+#     # Default limits for all users
+#     - { domain: '*', type: 'soft', item: 'nofile', value: '65536' }
+#     - { domain: '*', type: 'hard', item: 'nofile', value: '65536' }
+#     - { domain: '*', type: 'soft', item: 'nproc', value: '32768' }
+#     - { domain: '*', type: 'hard', item: 'nproc', value: '32768' }
+#     # Higher limits for monitoring user
+#     - { domain: 'monitoring', type: 'soft', item: 'nofile', value: '1048576' }
+#     - { domain: 'monitoring', type: 'hard', item: 'nofile', value: '1048576' }
+#   tags: [limits]
+
+# =============================================================================
+# TIME SYNCHRONIZATION - ACTIVE
+# =============================================================================
+
+- name: Set system timezone
+  timezone:
+    name: "{{ system_timezone }}"
+  tags: [timezone]
+
+# # Uncomment for NTP synchronization
+# - name: Install chrony for time sync
+#   apt:
+#     name: chrony
+#     state: present
+#   tags: [ntp]
+
+# - name: Configure chrony NTP servers
+#   template:
+#     src: chrony.conf.j2
+#     dest: /etc/chrony/chrony.conf
+#     owner: root
+#     group: root
+#     mode: '0644'
+#   notify: restart chrony
+#   tags: [ntp]
+
+# - name: Ensure chrony is running
+#   service:
+#     name: chrony
+#     state: started
+#     enabled: yes
+#   tags: [ntp]
+
+# =============================================================================
+# SERVICE OPTIMIZATION - COMMENTED (Ready to enable)
+# =============================================================================
+
+# - name: Disable unnecessary services
+#   service:
+#     name: "{{ item }}"
+#     state: stopped
+#     enabled: no
+#   loop:
+#     - snapd
+#     - bluetooth
+#     - cups
+#     - avahi-daemon
+#   failed_when: false  # Service might not exist
+#   tags: [services]
+#   when: disable_unnecessary_services | default(false)
+
+# - name: Set CPU governor to performance
+#   shell: |
+#     echo performance | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+#   changed_when: false
+#   failed_when: false
+#   tags: [performance]
+#   when: cpu_governor_performance | default(false)
+
+# - name: Disable Transparent Huge Pages (for Elasticsearch)
+#   shell: |
+#     echo never > /sys/kernel/mm/transparent_hugepage/enabled
+#     echo never > /sys/kernel/mm/transparent_hugepage/defrag
+#   changed_when: false
+#   failed_when: false
+#   tags: [performance, elasticsearch]
+#   when: disable_thp | default(false)
+
+# =============================================================================
+# NETWORK INTERFACE CONFIGURATION - COMMENTED (Ready to enable)
+# =============================================================================
+
+# - name: Configure SPAN interface (packet capture)
+#   block:
+#     - name: Bring SPAN interface up
+#       command: ip link set {{ span_interface }} up
+#       changed_when: false
+#       failed_when: false
+    
+#     - name: Enable promiscuous mode on SPAN interface
+#       command: ip link set {{ span_interface }} promisc on
+#       changed_when: false
+#       failed_when: false
+    
+#     - name: Disable offload features on SPAN interface
+#       command: |
+#         ethtool -K {{ span_interface }} gro off gso off tso off lro off || true
+#       changed_when: false
+#       failed_when: false
+    
+#     - name: Increase ring buffer size
+#       command: |
+#         ethtool -G {{ span_interface }} rx 4096 tx 4096 || true
+#       changed_when: false
+#       failed_when: false
+#   tags: [network, span]
+#   when: configure_span_interface | default(false)
+
+# =============================================================================
+# SECURITY HARDENING - COMMENTED (Ready to enable)
+# =============================================================================
+
+# - name: Install fail2ban
+#   apt:
+#     name: fail2ban
+#     state: present
+#   tags: [security, fail2ban]
+#   when: install_fail2ban | default(false)
+
+# - name: Configure fail2ban
+#   template:
+#     src: jail.local.j2
+#     dest: /etc/fail2ban/jail.local
+#     owner: root
+#     group: root
+#     mode: '0644'
+#   notify: restart fail2ban
+#   tags: [security, fail2ban]
+#   when: install_fail2ban | default(false)
+
+# - name: Harden SSH configuration
+#   lineinfile:
+#     path: /etc/ssh/sshd_config
+#     regexp: "{{ item.regexp }}"
+#     line: "{{ item.line }}"
+#     state: present
+#   loop:
+#     - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
+#     - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+#     - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
+#   notify: restart sshd
+#   tags: [security, ssh]
+#   when: harden_ssh | default(false)
+
+# - name: Install unattended-upgrades for security patches
+#   apt:
+#     name: unattended-upgrades
+#     state: present
+#   tags: [security, updates]
+#   when: auto_security_updates | default(false)
+
+# - name: Configure unattended-upgrades
+#   template:
+#     src: 50unattended-upgrades.j2
+#     dest: /etc/apt/apt.conf.d/50unattended-upgrades
+#     owner: root
+#     group: root
+#     mode: '0644'
+#   tags: [security, updates]
+#   when: auto_security_updates | default(false)
+
+# =============================================================================
+# DIRECTORY STRUCTURE - ACTIVE
+# =============================================================================
 
 - name: Create base directory structure
   file:
     path: "{{ item }}"
     state: directory
     mode: '0755'
+    owner: root
+    group: root
   loop:
     - "{{ deployment_base_dir }}"
+    - "{{ deployment_base_dir }}/scripts"
+    - "{{ deployment_base_dir }}/backups"
     - /var/log/monitoring
     - /etc/monitoring
+  tags: [directories]
 
 - name: Create deployment info file
   copy:
     content: |
-      Sonda 2.0 Deployment
-      ====================
+      Sonda 2.0 Deployment Information
+      ================================
+      
       Deployed: {{ ansible_date_time.iso8601 }}
       Environment: {{ deployment_environment }}
       Profile: {{ server_profile }}
       Version: {{ project_version }}
+      
+      System: {{ ansible_distribution }} {{ ansible_distribution_version }}
+      Hostname: {{ ansible_hostname }}
+      Kernel: {{ ansible_kernel }}
+      
+      Configuration:
+      - Deployment Path: {{ deployment_base_dir }}
+      - SPAN Interface: {{ span_interface }}
+      - Management Interface: {{ management_interface }}
+      - Timezone: {{ system_timezone }}
+      
+      Storage:
+      - Data1 (ES indices): {{ storage_data1_mount }}
+      - Data2 (Logs): {{ storage_data2_mount }}
+      - Data3 (PCAPs): {{ storage_data3_mount }}
     dest: "{{ deployment_base_dir }}/DEPLOYMENT_INFO"
     mode: '0644'
+  tags: [directories]
+
+# =============================================================================
+# VALIDATION - ACTIVE
+# =============================================================================
+
+- name: Verify sudo access
+  command: whoami
+  register: current_user
+  changed_when: false
+  become: yes
+  tags: [validation]
+
+- name: Display privilege status
+  debug:
+    msg: "Privilege escalation: {{ current_user.stdout }} ✓"
+  tags: [validation]
+
+- name: Check essential commands are available
+  command: which {{ item }}
+  register: cmd_check
+  changed_when: false
+  failed_when: cmd_check.rc != 0
+  loop:
+    - curl
+    - wget
+    - jq
+    - tcpdump
+  tags: [validation]
+
+- name: Verify timezone is set correctly
+  command: timedatectl show --property=Timezone --value
+  register: current_timezone
+  changed_when: false
+  tags: [validation]
+
+- name: Display timezone status
+  debug:
+    msg: "Timezone: {{ current_timezone.stdout }} (expected: {{ system_timezone }})"
+  tags: [validation]
+
+- name: Check base directories exist
+  stat:
+    path: "{{ item }}"
+  register: dir_checks
+  loop:
+    - "{{ deployment_base_dir }}"
+    - /var/log/monitoring
+    - /etc/monitoring
+  tags: [validation]
+
+- name: Verify all directories created
+  assert:
+    that:
+      - item.stat.exists
+      - item.stat.isdir
+    fail_msg: "Directory {{ item.item }} was not created"
+    success_msg: "Directory {{ item.item }} exists ✓"
+  loop: "{{ dir_checks.results }}"
+  tags: [validation]
+
+- name: Display validation summary
+  debug:
+    msg:
+      - "Validation Results:"
+      - "  ✓ Essential packages installed"
+      - "  ✓ Timezone configured: {{ current_timezone.stdout }}"
+      - "  ✓ Base directories created"
+      - "  ✓ Deployment info file created"
+      - ""
+      - "Stage 1.1 validation: PASSED"
+  tags: [validation]
 
 - name: Common role complete
   debug:
     msg:
       - "✓ Common role tasks completed"
-      - "  Base directories created"
-      - "  System validated"
+      - ""
+      - "Active features:"
+      - "  • Package cache updated"
+      - "  • Essential packages installed"
+      - "  • Timezone configured"
+      - "  • Directory structure created"
+      - "  • Basic validation passed"
+      - ""
+      - "Ready to enable (commented out):"
+      - "  • System users & groups"
+      - "  • Firewall configuration"
+      - "  • Kernel tuning (sysctl)"
+      - "  • System limits"
+      - "  • NTP time synchronization"
+      - "  • Service optimization"
+      - "  • Network interface tuning"
+      - "  • Security hardening"
