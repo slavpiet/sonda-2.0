@@ -1,1 +1,44 @@
+---
+# =============================================================================
+# STAGE 4: VALIDATE
+# =============================================================================
+# Validate deployment with health checks
+# Skeleton version
 
+- name: "Stage 4 - Validation and Health Checks"
+  hosts: monitoring_servers
+  gather_facts: no
+  tasks:
+    - name: Display stage information
+      debug:
+        msg:
+          - "┌─────────────────────────────────────────────┐"
+          - "│  STAGE 4: Validation & Health Checks        │"
+          - "└─────────────────────────────────────────────┘"
+          - "→ Checking service availability"
+          - "→ Validating Elasticsearch cluster health"
+          - "→ Verifying Kibana accessibility"
+          - "→ Checking packet capture status"
+          - "→ Running integration tests"
+
+    - name: Apply validation role
+      include_role:
+        name: validation
+      tags: [validation, health]
+
+    - name: Stage 4 complete
+      debug:
+        msg: "✓ Stage 4: Validate - Complete"
+
+- name: Display Stage 4 summary
+  hosts: monitoring_servers
+  gather_facts: no
+  tasks:
+    - name: Show completion message
+      debug:
+        msg:
+          - ""
+          - "═════════════════════════════════════════════"
+          - "  ✓ STAGE 4 COMPLETE: Validation Passed"
+          - "═════════════════════════════════════════════"
+          - ""

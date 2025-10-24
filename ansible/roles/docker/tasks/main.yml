@@ -1,0 +1,55 @@
+---
+# ============================================================================
+# DOCKER ROLE - ansible/roles/docker/tasks/main.yml
+# ============================================================================
+- name: Display docker role information
+  debug:
+    msg:
+      - "→ Executing: docker role"
+      - "  Purpose: Install Docker and Docker Compose"
+      - "  Docker version: {{ docker_version }}"
+      - "  Compose version: {{ docker_compose_version }}"
+
+- name: Check if Docker is already installed
+  command: docker --version
+  register: docker_installed
+  changed_when: false
+  failed_when: false
+
+- name: Display Docker status
+  debug:
+    msg: "Docker: {{ docker_installed.stdout if docker_installed.rc == 0 else 'Not installed (will be installed in real implementation)' }}"
+
+- name: Check if Docker Compose is installed
+  command: docker compose version
+  register: compose_installed
+  changed_when: false
+  failed_when: false
+
+- name: Display Compose status
+  debug:
+    msg: "Docker Compose: {{ compose_installed.stdout if compose_installed.rc == 0 else 'Not installed (will be installed in real implementation)' }}"
+
+- name: Create Docker configuration directory
+  file:
+    path: /etc/docker
+    state: directory
+    mode: '0755'
+
+- name: Create Docker network configuration placeholder
+  copy:
+    content: |
+      # Docker network configuration
+      # Network: {{ docker_network_name }}
+      # Subnet: {{ docker_network_subnet }}
+    dest: /etc/docker/network-info.txt
+    mode: '0644'
+
+- name: Docker role complete
+  debug:
+    msg:
+      - "✓ Docker role tasks completed"
+      - "  Docker status checked"
+      - "  Configuration directory created"
+      - ""
+      - "Note: Actual Docker installation will be implemented in next phase"

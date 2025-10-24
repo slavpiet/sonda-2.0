@@ -1,1 +1,88 @@
+# =============================================================================
+# Sonda 2.0 - Main Docker Compose File
+# =============================================================================
+# This is a Jinja2 template that Ansible renders
+# Skeleton version - shows structure only
 
+version: '3.8'
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  {{ docker_network_name }}:
+    name: {{ docker_network_name }}
+    driver: bridge
+    ipam:
+      config:
+        - subnet: {{ docker_network_subnet }}
+
+# =============================================================================
+# SERVICES
+# =============================================================================
+# Services are defined in separate files under services/
+# This approach keeps the main compose file clean and maintainable
+
+services:
+{% if enabled_services.elasticsearch %}
+  # Elasticsearch - Data storage and search
+  # Defined in: services/elasticsearch.yml.j2
+{% endif %}
+
+{% if enabled_services.kibana %}
+  # Kibana - Visualization and UI
+  # Defined in: services/kibana.yml.j2
+{% endif %}
+
+{% if enabled_services.logstash %}
+  # Logstash - Log processing pipeline
+  # Defined in: services/logstash.yml.j2
+{% endif %}
+
+{% if enabled_services.zeek %}
+  # Zeek - Network security monitor
+  # Defined in: services/zeek.yml.j2
+{% endif %}
+
+{% if enabled_services.suricata %}
+  # Suricata - IDS/IPS
+  # Defined in: services/suricata.yml.j2
+{% endif %}
+
+{% if enabled_services.arkime %}
+  # Arkime - Full packet capture
+  # Defined in: services/arkime.yml.j2
+{% endif %}
+
+{% if enabled_services.rita %}
+  # RITA - Real Intelligence Threat Analytics
+  # Defined in: services/rita.yml.j2
+{% endif %}
+
+{% if enabled_services.velociraptor %}
+  # Velociraptor - Endpoint visibility
+  # Defined in: services/velociraptor.yml.j2
+{% endif %}
+
+{% if enabled_services.fleet %}
+  # Elastic Fleet - Agent management
+  # Defined in: services/fleet.yml.j2
+{% endif %}
+
+# =============================================================================
+# NOTES
+# =============================================================================
+# Deployment Information:
+#   Environment: {{ deployment_environment }}
+#   Profile: {{ server_profile }}
+#   Generated: {{ ansible_date_time.iso8601 }}
+#
+# To deploy:
+#   docker compose up -d
+#
+# To view logs:
+#   docker compose logs -f [service_name]
+#
+# To stop:
+#   docker compose down
+# =============================================================================

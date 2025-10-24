@@ -1,0 +1,15 @@
+---
+# ----------------------------------------------------------------------------
+# ansible/roles/service_config/elasticsearch/tasks/main.yml
+# ----------------------------------------------------------------------------
+- name: Display Elasticsearch config role info
+  debug:
+    msg:
+      - "→ Configuring Elasticsearch"
+      - "  Creating index templates"
+      - "  Configuring ILM policies"
+      - "  Setting up users and roles"
+
+- name: Elasticsearch config placeholder
+  debug:
+    msg: "Elasticsearch post-deployment configuration will be implemented here"

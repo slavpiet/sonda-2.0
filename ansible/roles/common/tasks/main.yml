@@ -1,0 +1,68 @@
+---
+# Common role - System preparation
+# Skeleton version - validates structure only
+
+- name: Display role information
+  debug:
+    msg:
+      - "→ Executing: common role"
+      - "  Purpose: Base system configuration"
+      - "  Server: {{ ansible_hostname }}"
+      - "  OS: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+- name: Gather detailed facts
+  setup:
+    gather_subset:
+      - all
+  tags: always
+
+- name: Display system information
+  debug:
+    msg:
+      - "System Information:"
+      - "  OS: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+      - "  Kernel: {{ ansible_kernel }}"
+      - "  Architecture: {{ ansible_architecture }}"
+      - "  Hostname: {{ ansible_hostname }}"
+      - "  Python: {{ ansible_python_version }}"
+      - "  CPUs: {{ ansible_processor_vcpus | default(ansible_processor_cores | default('N/A')) }}"
+      - "  Memory: {{ (ansible_memtotal_mb / 1024) | round(1) if ansible_memtotal_mb is defined else 'N/A' }} GB"
+
+- name: Verify sudo access
+  command: whoami
+  register: current_user
+  changed_when: false
+  become: yes
+
+- name: Display privilege status
+  debug:
+    msg: "Running as: {{ current_user.stdout }} ✓"
+
+- name: Create base directory structure
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ deployment_base_dir }}"
+    - /var/log/monitoring
+    - /etc/monitoring
+
+- name: Create deployment info file
+  copy:
+    content: |
+      Sonda 2.0 Deployment
+      ====================
+      Deployed: {{ ansible_date_time.iso8601 }}
+      Environment: {{ deployment_environment }}
+      Profile: {{ server_profile }}
+      Version: {{ project_version }}
+    dest: "{{ deployment_base_dir }}/DEPLOYMENT_INFO"
+    mode: '0644'
+
+- name: Common role complete
+  debug:
+    msg:
+      - "✓ Common role tasks completed"
+      - "  Base directories created"
+      - "  System validated"

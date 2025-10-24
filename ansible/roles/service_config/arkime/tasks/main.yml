@@ -1,0 +1,14 @@
+---
+# ----------------------------------------------------------------------------
+# ansible/roles/service_config/arkime/tasks/main.yml
+# ----------------------------------------------------------------------------
+- name: Display Arkime config role info
+  debug:
+    msg:
+      - "→ Configuring Arkime"
+      - "  Initializing Elasticsearch indices"
+      - "  Creating initial user"
+
+- name: Arkime config placeholder
+  debug:
+    msg: "Arkime database initialization will be implemented here"

@@ -1,0 +1,131 @@
+---
+# Monitoring servers group variables
+
+# ================================
+# SERVER RESOURCE PROFILES
+# ================================
+# These profiles define resource allocation based on server size
+# Select via server_profile variable in inventory
+
+resource_profiles:
+  small:
+    description: "Dev/Test - Low traffic"
+    elasticsearch:
+      heap_size: "2g"
+      memory_limit: "4g"
+    logstash:
+      heap_size: "1g"
+      memory_limit: "2g"
+      workers: 2
+    zeek:
+      workers: 2
+    suricata:
+      threads: 2
+  
+  medium:
+    description: "Small production - Medium traffic"
+    elasticsearch:
+      heap_size: "8g"
+      memory_limit: "16g"
+    logstash:
+      heap_size: "2g"
+      memory_limit: "4g"
+      workers: 4
+    zeek:
+      workers: 4
+    suricata:
+      threads: 4
+  
+  large:
+    description: "Production - High traffic"
+    elasticsearch:
+      heap_size: "16g"
+      memory_limit: "32g"
+    logstash:
+      heap_size: "4g"
+      memory_limit: "8g"
+      workers: 8
+    zeek:
+      workers: 8
+    suricata:
+      threads: 8
+  
+  xlarge:
+    description: "Enterprise - Very high traffic"
+    elasticsearch:
+      heap_size: "32g"
+      memory_limit: "64g"
+    logstash:
+      heap_size: "8g"
+      memory_limit: "16g"
+      workers: 16
+    zeek:
+      workers: 16
+    suricata:
+      threads: 16
+
+# ================================
+# CALCULATED VARIABLES
+# ================================
+# These are derived from the server_profile set in inventory
+
+current_profile: "{{ resource_profiles[server_profile | default('small')] }}"
+
+# Elasticsearch
+elasticsearch_heap_size: "{{ current_profile.elasticsearch.heap_size }}"
+elasticsearch_memory_limit: "{{ current_profile.elasticsearch.memory_limit }}"
+
+# Logstash
+logstash_heap_size: "{{ current_profile.logstash.heap_size }}"
+logstash_memory_limit: "{{ current_profile.logstash.memory_limit }}"
+logstash_workers: "{{ current_profile.logstash.workers }}"
+
+# Zeek
+zeek_workers: "{{ current_profile.zeek.workers }}"
+
+# Suricata
+suricata_threads: "{{ current_profile.suricata.threads }}"
+
+# ================================
+# DIRECTORY STRUCTURE
+# ================================
+# Service-specific directories on target server
+
+service_dirs:
+  elasticsearch:
+    config: "{{ configs_deploy_dir }}/elasticsearch"
+    data: "{{ storage_data1_mount }}/elasticsearch"
+    logs: "/var/log/elasticsearch"
+  
+  kibana:
+    config: "{{ configs_deploy_dir }}/kibana"
+  
+  logstash:
+    config: "{{ configs_deploy_dir }}/logstash"
+    pipelines: "{{ configs_deploy_dir }}/logstash/pipelines"
+  
+  zeek:
+    config: "{{ configs_deploy_dir }}/zeek"
+    logs: "{{ storage_data2_mount }}/zeek/logs"
+    spool: "{{ storage_data2_mount }}/zeek/spool"
+  
+  suricata:
+    config: "{{ configs_deploy_dir }}/suricata"
+    logs: "{{ storage_data2_mount }}/suricata/logs"
+    rules: "{{ configs_deploy_dir }}/suricata/rules"
+  
+  arkime:
+    config: "{{ configs_deploy_dir }}/arkime"
+    pcap: "{{ storage_data3_mount }}/arkime/pcap"
+    logs: "{{ storage_data2_mount }}/arkime/logs"
+  
+  rita:
+    config: "{{ configs_deploy_dir }}/rita"
+    data: "{{ storage_data2_mount }}/rita"
+  
+  velociraptor:
+    config: "{{ configs_deploy_dir }}/velociraptor"
+    data: "{{ deployment_base_dir }}/velociraptor/data"
+  
+  fleet:
+    config: "{{ configs_deploy_dir }}/fleet"

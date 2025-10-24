@@ -1,1 +1,59 @@
+---
+# =============================================================================
+# STAGE 2: DEPLOY
+# =============================================================================
+# Deploys the Docker Compose stack
+# Skeleton version - validates structure only
 
+- name: "Stage 2 - Deploy Compose Stack"
+  hosts: monitoring_servers
+  gather_facts: no
+  tasks:
+    - name: Display stage information
+      debug:
+        msg:
+          - "┌─────────────────────────────────────────────┐"
+          - "│  STAGE 2: Deploy Compose Stack              │"
+          - "└─────────────────────────────────────────────┘"
+          - "→ Rendering compose files from templates"
+          - "→ Rendering service configurations"
+          - "→ Creating Docker networks and volumes"
+          - "→ Starting services with docker compose"
+          - ""
+          - "Services to deploy:"
+          - "  • Elasticsearch  ({{ 'enabled' if enabled_services.elasticsearch else 'disabled' }})"
+          - "  • Kibana         ({{ 'enabled' if enabled_services.kibana else 'disabled' }})"
+          - "  • Logstash       ({{ 'enabled' if enabled_services.logstash else 'disabled' }})"
+          - "  • Zeek           ({{ 'enabled' if enabled_services.zeek else 'disabled' }})"
+          - "  • Suricata       ({{ 'enabled' if enabled_services.suricata else 'disabled' }})"
+          - "  • Arkime         ({{ 'enabled' if enabled_services.arkime else 'disabled' }})"
+          - "  • RITA           ({{ 'enabled' if enabled_services.rita else 'disabled' }})"
+          - "  • Velociraptor   ({{ 'enabled' if enabled_services.velociraptor else 'disabled' }})"
+          - "  • Fleet          ({{ 'enabled' if enabled_services.fleet else 'disabled' }})"
+
+    - name: Apply compose_stack role
+      include_role:
+        name: compose_stack
+      tags: [compose]
+
+    - name: Stage 2 complete
+      debug:
+        msg:
+          - ""
+          - "✓ Stage 2: Deploy - Complete"
+          - ""
+          - "Compose stack deployed to: {{ compose_deploy_dir }}"
+          - "Service configs deployed to: {{ configs_deploy_dir }}"
+
+- name: Display Stage 2 summary
+  hosts: monitoring_servers
+  gather_facts: no
+  tasks:
+    - name: Show completion message
+      debug:
+        msg:
+          - ""
+          - "═════════════════════════════════════════════"
+          - "  ✓ STAGE 2 COMPLETE: Services Deployed"
+          - "═════════════════════════════════════════════"
+          - ""

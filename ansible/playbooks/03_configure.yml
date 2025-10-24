@@ -1,1 +1,69 @@
+---
+# =============================================================================
+# STAGE 3: CONFIGURE
+# =============================================================================
+# Post-deployment configuration for services
+# Skeleton version
 
+- name: "Stage 3 - Post-Deployment Configuration"
+  hosts: monitoring_servers
+  gather_facts: no
+  tasks:
+    - name: Display stage information
+      debug:
+        msg:
+          - "┌─────────────────────────────────────────────┐"
+          - "│  STAGE 3: Post-Deployment Configuration     │"
+          - "└─────────────────────────────────────────────┘"
+          - "→ Configuring Elasticsearch (indices, ILM)"
+          - "→ Importing Kibana dashboards"
+          - "→ Configuring Logstash pipelines"
+          - "→ Initializing Arkime database"
+          - "→ Creating Velociraptor admin user"
+
+    - name: Configure Elasticsearch
+      include_role:
+        name: service_config/elasticsearch
+      when: enabled_services.elasticsearch
+      tags: [elasticsearch, config]
+
+    - name: Configure Kibana
+      include_role:
+        name: service_config/kibana
+      when: enabled_services.kibana
+      tags: [kibana, config]
+
+    - name: Configure Logstash
+      include_role:
+        name: service_config/logstash
+      when: enabled_services.logstash
+      tags: [logstash, config]
+
+    - name: Configure Arkime
+      include_role:
+        name: service_config/arkime
+      when: enabled_services.arkime
+      tags: [arkime, config]
+
+    - name: Configure Velociraptor
+      include_role:
+        name: service_config/velociraptor
+      when: enabled_services.velociraptor
+      tags: [velociraptor, config]
+
+    - name: Stage 3 complete
+      debug:
+        msg: "✓ Stage 3: Configure - Complete"
+
+- name: Display Stage 3 summary
+  hosts: monitoring_servers
+  gather_facts: no
+  tasks:
+    - name: Show completion message
+      debug:
+        msg:
+          - ""
+          - "═════════════════════════════════════════════"
+          - "  ✓ STAGE 3 COMPLETE: Services Configured"
+          - "═════════════════════════════════════════════"
+          - ""

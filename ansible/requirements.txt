@@ -1,0 +1,32 @@
+
+# =============================================================================
+# ansible/requirements.txt
+# =============================================================================
+# Python dependencies for Sonda 2.0
+
+# Ansible - Using ansible-core for more control
+# ansible-core 2.15+ provides the features we need
+ansible-core>=2.15.0,<2.18.0
+ansible-lint>=6.0.0
+
+# Testing
+molecule>=6.0.0
+molecule-plugins[docker]>=23.0.0
+pytest>=7.0.0
+pytest-testinfra>=8.0.0
+
+# Docker support
+docker>=6.0.0
+
+# YAML
+pyyaml>=6.0
+
+# Jinja2
+jinja2>=3.0.0
+
+# SSH/Crypto
+paramiko>=3.0.0
+cryptography>=41.0.0
+
+# Utilities
+requests>=2.31.0

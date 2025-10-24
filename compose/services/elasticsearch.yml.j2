@@ -1,1 +1,54 @@
 
+---
+# =============================================================================
+# compose/services/elasticsearch.yml.j2
+# =============================================================================
+# Elasticsearch service definition
+# Skeleton version - shows structure
+
+elasticsearch:
+  image: docker.elastic.co/elasticsearch/elasticsearch:{{ versions.elasticsearch }}
+  container_name: elasticsearch
+  hostname: elasticsearch
+  restart: unless-stopped
+  
+  environment:
+    - node.name=elasticsearch
+    - cluster.name=sonda-monitoring
+    - discovery.type=single-node
+    - bootstrap.memory_lock=true
+    - "ES_JAVA_OPTS=-Xms{{ elasticsearch_heap_size }} -Xmx{{ elasticsearch_heap_size }}"
+    - xpack.security.enabled=false
+  
+  ulimits:
+    memlock:
+      soft: -1
+      hard: -1
+    nofile:
+      soft: 65536
+      hard: 65536
+  
+  volumes:
+    - {{ service_dirs.elasticsearch.config }}/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    - {{ service_dirs.elasticsearch.data }}:/usr/share/elasticsearch/data
+  
+  networks:
+    - {{ docker_network_name }}
+  
+  ports:
+    - "9200:9200"
+    - "9300:9300"
+  
+  mem_limit: {{ elasticsearch_memory_limit }}
+  
+  healthcheck:
+    test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+    interval: 30s
+    timeout: 10s
+    retries: 5
+  
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "100m"
+      max-file: "3"

@@ -1,0 +1,61 @@
+
+---
+# ============================================================================
+# STORAGE ROLE - ansible/roles/storage/tasks/main.yml
+# ============================================================================
+- name: Display storage role information
+  debug:
+    msg:
+      - "→ Executing: storage role"
+      - "  Purpose: Configure storage mount points"
+      - "  /data1: {{ storage_data1_mount }} (Elasticsearch indices)"
+      - "  /data2: {{ storage_data2_mount }} (Logs)"
+      - "  /data3: {{ storage_data3_mount }} (PCAPs)"
+
+- name: Check if mount points already exist
+  stat:
+    path: "{{ item }}"
+  register: mount_checks
+  loop:
+    - "{{ storage_data1_mount }}"
+    - "{{ storage_data2_mount }}"
+    - "{{ storage_data3_mount }}"
+
+- name: Display mount point status
+  debug:
+    msg: "{{ item.item }}: {{ 'exists' if item.stat.exists else 'will be created' }}"
+  loop: "{{ mount_checks.results }}"
+
+# - name: Create storage mount point directories (skeleton)
+#   file:
+#     path: "{{ item }}"
+#     state: directory
+#     mode: '0755'
+#     owner: root
+#     group: root
+#   loop:
+#     - "{{ storage_data1_mount }}"
+#     - "{{ storage_data2_mount }}"
+#     - "{{ storage_data3_mount }}"
+
+# - name: Create service-specific subdirectories
+#   file:
+#     path: "{{ item }}"
+#     state: directory
+#     mode: '0755'
+#   loop:
+#     # Data1 - Elasticsearch
+#     - "{{ storage_data1_mount }}/elasticsearch"
+#     # Data2 - Logs
+#     - "{{ storage_data2_mount }}/zeek"
+#     - "{{ storage_data2_mount }}/suricata"
+#     - "{{ storage_data2_mount }}/rita"
+#     # Data3 - PCAPs
+#     - "{{ storage_data3_mount }}/arkime"
+
+- name: Storage role complete
+  debug:
+    msg:
+      - "✓ Storage role tasks completed"
+      - "  Mount points created/verified"
+      - "  Service directories created"

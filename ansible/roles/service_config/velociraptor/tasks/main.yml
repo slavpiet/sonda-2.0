@@ -1,0 +1,14 @@
+---
+# ----------------------------------------------------------------------------
+# ansible/roles/service_config/velociraptor/tasks/main.yml
+# ----------------------------------------------------------------------------
+- name: Display Velociraptor config role info
+  debug:
+    msg:
+      - "→ Configuring Velociraptor"
+      - "  Creating admin user"
+      - "  Generating API keys"
+
+- name: Velociraptor config placeholder
+  debug:
+    msg: "Velociraptor user creation will be implemented here"

@@ -1,0 +1,112 @@
+---
+# Compose Stack Role - Deploys Docker Compose based monitoring stack
+# This is the bridge between Ansible and Docker Compose
+# Skeleton version
+
+- name: Display compose_stack role information
+  debug:
+    msg:
+      - "→ Executing: compose_stack role"
+      - "  Purpose: Deploy Docker Compose monitoring stack"
+      - "  Source: {{ compose_source_dir }}"
+      - "  Target: {{ compose_deploy_dir }}"
+
+- name: Create deployment directory structure
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ deployment_base_dir }}"
+    - "{{ compose_deploy_dir }}"
+    - "{{ compose_deploy_dir }}/services"
+    - "{{ configs_deploy_dir }}"
+
+- name: Create service config directories
+  file:
+    path: "{{ item.value.config }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ service_dirs | dict2items }}"
+  when: item.value.config is defined
+
+- name: Display compose file rendering status
+  debug:
+    msg:
+      - "Compose files that will be rendered:"
+      - "  • docker-compose.yml (main orchestrator)"
+      - "  • services/elasticsearch.yml ({{ 'enabled' if enabled_services.elasticsearch else 'disabled' }})"
+      - "  • services/kibana.yml ({{ 'enabled' if enabled_services.kibana else 'disabled' }})"
+      - "  • services/logstash.yml ({{ 'enabled' if enabled_services.logstash else 'disabled' }})"
+      - "  • services/zeek.yml ({{ 'enabled' if enabled_services.zeek else 'disabled' }})"
+      - "  • services/suricata.yml ({{ 'enabled' if enabled_services.suricata else 'disabled' }})"
+      - "  • services/arkime.yml ({{ 'enabled' if enabled_services.arkime else 'disabled' }})"
+      - "  • services/rita.yml ({{ 'enabled' if enabled_services.rita else 'disabled' }})"
+      - "  • services/velociraptor.yml ({{ 'enabled' if enabled_services.velociraptor else 'disabled' }})"
+      - "  • services/fleet.yml ({{ 'enabled' if enabled_services.fleet else 'disabled' }})"
+
+- name: Create placeholder compose files
+  copy:
+    content: |
+      # Sonda 2.0 - Docker Compose Stack
+      # This is a placeholder for skeleton validation
+      # Actual compose files will be rendered in implementation phase
+      
+      # Environment: {{ deployment_environment }}
+      # Profile: {{ server_profile }}
+      # Deployed: {{ ansible_date_time.iso8601 }}
+    dest: "{{ compose_deploy_dir }}/docker-compose.yml"
+    mode: '0644'
+
+- name: Create service placeholder files
+  copy:
+    content: |
+      # Service: {{ item.key }}
+      # Status: {{ 'enabled' if item.value else 'disabled' }}
+    dest: "{{ compose_deploy_dir }}/services/{{ item.key }}.yml"
+    mode: '0644'
+  loop: "{{ enabled_services | dict2items }}"
+
+- name: Display Docker network information
+  debug:
+    msg:
+      - "Docker network to be created:"
+      - "  Name: {{ docker_network_name }}"
+      - "  Subnet: {{ docker_network_subnet }}"
+      - "  Driver: bridge"
+
+- name: Create network info file
+  copy:
+    content: |
+      Docker Network Configuration
+      ============================
+      Network Name: {{ docker_network_name }}
+      Subnet: {{ docker_network_subnet }}
+      Driver: bridge
+      
+      This network connects all monitoring services
+    dest: "{{ compose_deploy_dir }}/NETWORK_INFO"
+    mode: '0644'
+
+- name: Display deployment paths
+  debug:
+    msg:
+      - "Deployment paths created:"
+      - "  Base: {{ deployment_base_dir }}"
+      - "  Compose: {{ compose_deploy_dir }}"
+      - "  Configs: {{ configs_deploy_dir }}"
+      - ""
+      - "Service directories:"
+      - "  Elasticsearch data: {{ service_dirs.elasticsearch.data }}"
+      - "  Zeek logs: {{ service_dirs.zeek.logs }}"
+      - "  Suricata logs: {{ service_dirs.suricata.logs }}"
+      - "  Arkime pcap: {{ service_dirs.arkime.pcap }}"
+
+- name: Compose stack role complete
+  debug:
+    msg:
+      - "✓ Compose stack role completed"
+      - "  Directory structure created"
+      - "  Placeholder files generated"
+      - ""
+      - "Next phase: Actual compose rendering and service deployment"

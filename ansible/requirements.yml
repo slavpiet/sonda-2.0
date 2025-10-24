@@ -1,0 +1,25 @@
+---
+# =============================================================================
+# ansible/requirements.yml
+# =============================================================================
+# Ansible Galaxy collections
+
+collections:
+  # Community General
+  - name: community.general
+    version: ">=8.0.0"
+  
+  # Docker support
+  - name: community.docker
+    version: ">=3.4.0"
+  
+  # Crypto utilities
+  - name: community.crypto
+    version: ">=2.16.0"
+  
+  # PostgreSQL (for RITA)
+  - name: community.postgresql
+    version: ">=3.2.0"
+
+# No external roles needed - we use our own
+roles: []

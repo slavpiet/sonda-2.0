@@ -1,1 +1,91 @@
+---
+# =============================================================================
+# STAGE 1: PREPARE
+# =============================================================================
+# Prepares the infrastructure: system, storage, and Docker
+# Skeleton version - validates structure only
 
+- name: "Stage 1.1 - System Preparation"
+  hosts: monitoring_servers
+  gather_facts: yes
+  tasks:
+    - name: Display stage information
+      debug:
+        msg:
+          - "┌─────────────────────────────────────────────┐"
+          - "│  STAGE 1.1: System Preparation              │"
+          - "└─────────────────────────────────────────────┘"
+          - "→ Installing base packages"
+          - "→ Configuring users and permissions"
+          - "→ Setting up firewall"
+          - "→ Tuning kernel parameters"
+
+    - name: Apply common role
+      include_role:
+        name: common
+      tags: [common]
+
+    - name: Stage 1.1 complete
+      debug:
+        msg: "✓ Stage 1.1: System Preparation - Complete"
+
+- name: "Stage 1.2 - Storage Configuration"
+  hosts: monitoring_servers
+  gather_facts: no
+  tasks:
+    - name: Display stage information
+      debug:
+        msg:
+          - "┌─────────────────────────────────────────────┐"
+          - "│  STAGE 1.2: Storage Configuration           │"
+          - "└─────────────────────────────────────────────┘"
+          - "→ Detecting storage devices"
+          - "→ Configuring /data1 (Elasticsearch indices)"
+          - "→ Configuring /data2 (Logs)"
+          - "→ Configuring /data3 (PCAPs)"
+
+    - name: Apply storage role
+      include_role:
+        name: storage
+      tags: [storage]
+
+    - name: Stage 1.2 complete
+      debug:
+        msg: "✓ Stage 1.2: Storage Configuration - Complete"
+
+- name: "Stage 1.3 - Docker Installation"
+  hosts: monitoring_servers
+  gather_facts: no
+  tasks:
+    - name: Display stage information
+      debug:
+        msg:
+          - "┌─────────────────────────────────────────────┐"
+          - "│  STAGE 1.3: Docker Installation             │"
+          - "└─────────────────────────────────────────────┘"
+          - "→ Installing Docker Engine"
+          - "→ Installing Docker Compose"
+          - "→ Configuring Docker daemon"
+          - "→ Creating Docker networks"
+
+    - name: Apply docker role
+      include_role:
+        name: docker
+      tags: [docker]
+
+    - name: Stage 1.3 complete
+      debug:
+        msg: "✓ Stage 1.3: Docker Installation - Complete"
+
+- name: Display Stage 1 summary
+  hosts: monitoring_servers
+  gather_facts: no
+  tasks:
+    - name: Show completion message
+      debug:
+        msg:
+          - ""
+          - "═════════════════════════════════════════════"
+          - "  ✓ STAGE 1 COMPLETE: Infrastructure Ready"
+          - "═════════════════════════════════════════════"
+          - ""

@@ -1,0 +1,15 @@
+---
+# ----------------------------------------------------------------------------
+# ansible/roles/service_config/kibana/tasks/main.yml
+# ----------------------------------------------------------------------------
+- name: Display Kibana config role info
+  debug:
+    msg:
+      - "→ Configuring Kibana"
+      - "  Importing dashboards"
+      - "  Setting up visualizations"
+      - "  Configuring index patterns"
+
+- name: Kibana config placeholder
+  debug:
+    msg: "Kibana dashboard import will be implemented here"

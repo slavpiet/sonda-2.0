@@ -1,0 +1,14 @@
+---
+# ----------------------------------------------------------------------------
+# ansible/roles/service_config/logstash/tasks/main.yml
+# ----------------------------------------------------------------------------
+- name: Display Logstash config role info
+  debug:
+    msg:
+      - "→ Configuring Logstash"
+      - "  Validating pipeline configurations"
+      - "  Testing grok patterns"
+
+- name: Logstash config placeholder
+  debug:
+    msg: "Logstash pipeline validation will be implemented here"

@@ -1,1 +1,97 @@
+---
+# =============================================================================
+# Sonda 2.0 - Main Deployment Playbook
+# =============================================================================
+# Usage: ansible-playbook -i inventories/development playbooks/site.yml
+# Or:    make deploy-dev
 
+- name: "Sonda 2.0 - Network Monitoring Stack Deployment"
+  hosts: monitoring_servers
+  gather_facts: yes
+  
+  pre_tasks:
+    - name: Display deployment banner
+      debug:
+        msg:
+          - "╔═══════════════════════════════════════════════════════════╗"
+          - "║         Sonda 2.0 - Network Monitoring Stack             ║"
+          - "║                  Hybrid Architecture                      ║"
+          - "╚═══════════════════════════════════════════════════════════╝"
+          - ""
+          - "Target Host:    {{ inventory_hostname }} ({{ ansible_host }})"
+          - "Environment:    {{ deployment_environment }}"
+          - "Server Profile: {{ server_profile }}"
+          - "SPAN Interface: {{ span_interface }}"
+          - ""
+          - "Deployment Path: {{ deployment_base_dir }}"
+          - "Compose Path:    {{ compose_deploy_dir }}"
+          - ""
+      tags: always
+
+    - name: Verify Python is available
+      raw: "which python3"
+      register: python_check
+      changed_when: false
+      tags: always
+
+    - name: Display enabled services
+      debug:
+        msg:
+          - "Enabled Services:"
+          - "  - Elasticsearch: {{ enabled_services.elasticsearch }}"
+          - "  - Kibana:        {{ enabled_services.kibana }}"
+          - "  - Logstash:      {{ enabled_services.logstash }}"
+          - "  - Zeek:          {{ enabled_services.zeek }}"
+          - "  - Suricata:      {{ enabled_services.suricata }}"
+          - "  - Arkime:        {{ enabled_services.arkime }}"
+          - "  - RITA:          {{ enabled_services.rita }}"
+          - "  - Velociraptor:  {{ enabled_services.velociraptor }}"
+          - "  - Fleet:         {{ enabled_services.fleet }}"
+          - ""
+      tags: always
+
+  tasks:
+    - name: Note about stages
+      debug:
+        msg: "All stages are now executed as separate playbooks"
+      tags: always
+
+- name: Import Stage 1
+  import_playbook: 01_prepare.yml
+  tags: [stage1, prepare]
+
+- name: Import Stage 2
+  import_playbook: 02_deploy.yml
+  tags: [stage2, deploy]
+
+- name: Import Stage 3
+  import_playbook: 03_configure.yml
+  tags: [stage3, configure]
+
+- name: Import Stage 4
+  import_playbook: 04_validate.yml
+  tags: [stage4, validate]
+
+- name: Final Summary
+  hosts: monitoring_servers
+  gather_facts: no
+  tasks:
+    - name: Display deployment summary
+      debug:
+        msg:
+          - "╔═══════════════════════════════════════════════════════════╗"
+          - "║              Deployment Complete!                         ║"
+          - "╚═══════════════════════════════════════════════════════════╝"
+          - ""
+          - "Access Points:"
+          - "  • Kibana:        http://{{ ansible_host }}:5601"
+          - "  • Elasticsearch: http://{{ ansible_host }}:9200"
+          - "  • Arkime:        http://{{ ansible_host }}:8005"
+          - "  • Velociraptor:  https://{{ ansible_host }}:8889"
+          - ""
+          - "Next Steps:"
+          - "  1. Run 'make validate' to check all services"
+          - "  2. Check logs: 'make logs'"
+          - "  3. Review documentation in docs/"
+          - ""
+      tags: always

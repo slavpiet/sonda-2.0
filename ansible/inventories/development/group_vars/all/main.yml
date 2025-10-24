@@ -1,0 +1,86 @@
+---
+# Global variables for all hosts
+
+# ================================
+# PROJECT METADATA
+# ================================
+project_name: sonda-2.0
+project_version: "2.0.0-skeleton"
+
+# ================================
+# PATHS
+# ================================
+# Compose directory (on control machine)
+compose_source_dir: "{{ playbook_dir }}/../../compose"
+
+# Deployment directory (on target server)
+deployment_base_dir: /opt/monitoring
+compose_deploy_dir: "{{ deployment_base_dir }}/compose"
+configs_deploy_dir: "{{ deployment_base_dir }}/configs"
+
+# Storage mount points
+storage_data1_mount: /data1  # Elasticsearch indices
+storage_data2_mount: /data2  # Text logs (Zeek, Suricata, RITA)
+storage_data3_mount: /data3  # PCAPs (Arkime)
+
+# ================================
+# DOCKER CONFIGURATION
+# ================================
+docker_version: "24.0"
+docker_compose_version: "v2.23.0"
+docker_network_name: monitoring_network
+docker_network_subnet: 172.20.0.0/16
+
+# ================================
+# SOFTWARE VERSIONS
+# ================================
+versions:
+  elasticsearch: "8.11.3"
+  kibana: "8.11.3"
+  logstash: "8.11.3"
+  zeek: "6.0.3"
+  suricata: "7.0.2"
+  arkime: "5.0.0"
+  rita: "latest"
+  velociraptor: "0.7.0"
+  elastic_agent: "8.11.3"
+
+# ================================
+# SERVICE ENABLEMENT
+# ================================
+# Control which services to deploy
+enabled_services:
+  elasticsearch: true
+  kibana: true
+  logstash: true
+  zeek: true
+  suricata: true
+  arkime: true
+  rita: true
+  velociraptor: true
+  fleet: true
+
+# ================================
+# RETENTION POLICIES (days)
+# ================================
+retention:
+  elasticsearch_indices: 90
+  zeek_logs: 90
+  suricata_logs: 90
+  arkime_pcap: 30
+
+# ================================
+# SYSTEM CONFIGURATION
+# ================================
+system_timezone: UTC
+ntp_servers:
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org
+
+# Firewall ports to open
+firewall_allowed_ports:
+  - "22/tcp"     # SSH
+  - "5601/tcp"   # Kibana
+  - "9200/tcp"   # Elasticsearch
+  - "8005/tcp"   # Arkime viewer
+  - "8889/tcp"   # Velociraptor
